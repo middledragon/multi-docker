@@ -1,0 +1,22 @@
+sudo: requrired
+service:
+  - docker
+
+before_install:
+  - docker build -t middledragon/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run middledragon/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t middledragon/multi-client ./client
+  - docker build -t middledragon/multi-nginx ./nginx
+  - docker build -t middledragon/multi-server ./server
+  - docker build -t middledragon/multi-worker ./worker
+  # Log into the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push middledragon/multi-client
+  - docker push middledragon/multi-nginx
+  - docker push middledragon/multi-server
+  - docker push middledragon/multi-worker
